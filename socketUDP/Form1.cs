@@ -81,7 +81,7 @@ namespace socketUDP
                 IPEndPoint localEP = new IPEndPoint(localIP, localPort);
 
                 SSockUDP = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                SSockUDP.ReceiveTimeout = 2000;
+                SSockUDP.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 5000);
                 SSockUDP.Bind(localEP);
 
                 AppendRecvLine($"Bind OK sur {localEP}");
