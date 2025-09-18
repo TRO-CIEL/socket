@@ -15,6 +15,10 @@ namespace socketUDP
     public partial class Form1 : Form
     {
         private Socket SSockUDP;
+        // Sockets TCP pour le serveur (écoute + client connecté)
+        private Socket listenTcp;
+        private Socket clientTcp;
+        private IPEndPoint clientTcpEP;
 
         public Form1()
         {
@@ -33,6 +37,7 @@ namespace socketUDP
             var btnClear = this.Controls.Find("buttonClear", true).FirstOrDefault() as Button;
             var btnStartPolling = this.Controls.Find("buttonStartPolling", true).FirstOrDefault() as Button;
             var btnStopPolling = this.Controls.Find("buttonStopPolling", true).FirstOrDefault() as Button;
+            var btnStartTcpServer = this.Controls.Find("buttonStartTcpServer", true).FirstOrDefault() as Button;
 
             if (btnCreate != null) btnCreate.Enabled = !opened;
             if (btnClose != null) btnClose.Enabled = opened;
@@ -44,6 +49,9 @@ namespace socketUDP
             bool pollingActive = timerPolling.Enabled;
             if (btnStartPolling != null) btnStartPolling.Enabled = opened && !pollingActive;
             if (btnStopPolling != null) btnStopPolling.Enabled = opened && pollingActive;
+
+            // Démarrage serveur TCP : activable si pas déjà en écoute
+            if (btnStartTcpServer != null) btnStartTcpServer.Enabled = (listenTcp == null);
         }
 
         private void buttonStartPolling_Click(object sender, EventArgs e)
@@ -116,6 +124,11 @@ namespace socketUDP
                 {
                     AppendRecvLine("Socket déjà fermée ou non créée.");
                 }
+
+                // Arrêt et fermeture propre du serveur TCP s'il est actif
+                try { if (clientTcp != null) { clientTcp.Close(); clientTcp = null; } } catch { }
+                try { if (listenTcp != null) { listenTcp.Close(); listenTcp = null; } } catch { }
+                try { if (timerTcp != null) timerTcp.Stop(); } catch { }
             }
             catch (SocketException se)
             {
@@ -211,6 +224,101 @@ namespace socketUDP
         private void AppendRecvLine(string text)
         {
             textBoxReceive.AppendText(text + Environment.NewLine);
+        }
+
+        // Journalisation pour le serveur TCP
+        private void AppendServerLine(string text)
+        {
+            var tb = this.Controls.Find("textBoxServerLog", true).FirstOrDefault() as TextBox;
+            if (tb != null)
+                tb.AppendText(text + Environment.NewLine);
+            else
+                AppendRecvLine("[TCP] " + text);
+        }
+
+        // Démarrage du serveur TCP (écoute et Poll via timer)
+        private void buttonStartTcpServer_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (listenTcp != null)
+                {
+                    AppendServerLine("Serveur TCP déjà démarré.");
+                    return;
+                }
+
+                var localIP = IPAddress.Parse(textBoxLocalIP.Text.Trim());
+                int localPort = int.Parse(textBoxLocalPort.Text.Trim());
+                IPEndPoint localEP = new IPEndPoint(localIP, localPort);
+
+                listenTcp = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                listenTcp.Bind(localEP);
+                listenTcp.Listen(10);
+
+                AppendServerLine($"Serveur TCP en écoute sur {localEP}");
+                timerTcp.Start();
+                UpdateButtons();
+            }
+            catch (SocketException se)
+            {
+                AppendServerLine("Erreur démarrage serveur TCP : " + se.Message);
+                try { if (listenTcp != null) { listenTcp.Close(); listenTcp = null; } } catch { }
+            }
+            catch (Exception ex)
+            {
+                AppendServerLine("Erreur inconnue (serveur TCP) : " + ex.Message);
+                try { if (listenTcp != null) { listenTcp.Close(); listenTcp = null; } } catch { }
+            }
+        }
+
+        // Boucle scrutation TCP Timer
+        private void timerTcp_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                if (listenTcp != null && listenTcp.Poll(0, SelectMode.SelectRead))
+                {
+                    Socket s = listenTcp.Accept();
+                    clientTcp = s;
+                    try { clientTcpEP = s.RemoteEndPoint as IPEndPoint; } catch { clientTcpEP = null; }
+                    AppendServerLine($"Client connecté: {clientTcpEP}");
+                }
+
+                if (clientTcp != null)
+                {
+                    // Détection déconnexion
+                    if (clientTcp.Poll(0, SelectMode.SelectRead))
+                    {
+                        if (clientTcp.Available == 0)
+                        {
+                            AppendServerLine("Client déconnecté.");
+                            clientTcp.Close();
+                            clientTcp = null;
+                            clientTcpEP = null;
+                        }
+                        else
+                        {
+                            byte[] buf = new byte[4096];
+                            int n = clientTcp.Receive(buf);
+                            if (n > 0)
+                            {
+                                string txt = Encoding.ASCII.GetString(buf, 0, n);
+                                AppendServerLine($"De {clientTcpEP} -> {txt}");
+                                // Echo
+                                clientTcp.Send(buf, n, SocketFlags.None);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (SocketException se)
+            {
+                AppendServerLine("Erreur TCP : " + se.SocketErrorCode + " - " + se.Message);
+            }
+            catch (Exception ex)
+            {
+                AppendServerLine("Erreur inconnue TCP : " + ex.Message);
+            }
         }
 
         // Gestion de l'événement TextChanged pour éviter les erreurs du Concepteur

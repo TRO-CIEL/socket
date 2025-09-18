@@ -45,6 +45,9 @@ namespace socketUDP
             this.buttonClear = new System.Windows.Forms.Button();
             this.buttonStartPolling = new System.Windows.Forms.Button();
             this.buttonStopPolling = new System.Windows.Forms.Button();
+            this.buttonStartTcpServer = new System.Windows.Forms.Button();
+            this.textBoxServerLog = new System.Windows.Forms.TextBox();
+            this.timerTcp = new System.Windows.Forms.Timer(this.components);
             this.labelLocalPort = new System.Windows.Forms.Label();
             this.labelDestPort = new System.Windows.Forms.Label();
             this.timerPolling = new System.Windows.Forms.Timer(this.components);
@@ -206,6 +209,30 @@ namespace socketUDP
             this.buttonStopPolling.UseVisualStyleBackColor = true;
             this.buttonStopPolling.Click += new System.EventHandler(this.buttonStopPolling_Click);
             // 
+            // buttonStartTcpServer
+            // 
+            this.buttonStartTcpServer.Location = new System.Drawing.Point(315, 200);
+            this.buttonStartTcpServer.Name = "buttonStartTcpServer";
+            this.buttonStartTcpServer.Size = new System.Drawing.Size(200, 25);
+            this.buttonStartTcpServer.TabIndex = 19;
+            this.buttonStartTcpServer.Text = "Démarrer serveur TCP";
+            this.buttonStartTcpServer.UseVisualStyleBackColor = true;
+            this.buttonStartTcpServer.Click += new System.EventHandler(this.buttonStartTcpServer_Click);
+            // 
+            // textBoxServerLog
+            // 
+            this.textBoxServerLog.Location = new System.Drawing.Point(12, 300);
+            this.textBoxServerLog.Multiline = true;
+            this.textBoxServerLog.Name = "textBoxServerLog";
+            this.textBoxServerLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textBoxServerLog.Size = new System.Drawing.Size(508, 90);
+            this.textBoxServerLog.TabIndex = 20;
+            // 
+            // timerTcp
+            // 
+            this.timerTcp.Interval = 100;
+            this.timerTcp.Tick += new System.EventHandler(this.timerTcp_Tick);
+            // 
             // labelLocalPort
             // 
             this.labelLocalPort.AutoSize = true;
@@ -233,9 +260,11 @@ namespace socketUDP
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(534, 311);
+            this.ClientSize = new System.Drawing.Size(534, 406);
             this.Controls.Add(this.buttonStopPolling);
             this.Controls.Add(this.buttonStartPolling);
+            this.Controls.Add(this.buttonStartTcpServer);
+            this.Controls.Add(this.textBoxServerLog);
             this.Controls.Add(this.buttonClear);
             this.Controls.Add(this.buttonReceive);
             this.Controls.Add(this.buttonSend);
@@ -282,8 +311,12 @@ namespace socketUDP
         private System.Windows.Forms.Button buttonClear;
         private System.Windows.Forms.Button buttonStartPolling;
         private System.Windows.Forms.Button buttonStopPolling;
+        private System.Windows.Forms.Button buttonStartTcpServer;
+        private System.Windows.Forms.TextBox textBoxServerLog;
         private System.Windows.Forms.Label labelLocalPort;
         private System.Windows.Forms.Label labelDestPort;
         private System.Windows.Forms.Timer timerPolling;
+        private System.Windows.Forms.Timer timerTcp;
+        private System.ComponentModel.IContainer components;
     }
 }
