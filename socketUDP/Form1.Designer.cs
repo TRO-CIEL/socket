@@ -10,7 +10,6 @@ namespace socketUDP
         /// <summary>
         /// Nettoyage des ressources utilisées.
         /// </summary>
-        /// <param name="disposing">true si les ressources managées doivent être supprimées ; sinon, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -52,13 +51,13 @@ namespace socketUDP
             this.labelLocal.AutoSize = true;
             this.labelLocal.Location = new System.Drawing.Point(12, 15);
             this.labelLocal.Name = "labelLocal";
-            this.labelLocal.Size = new System.Drawing.Size(37, 13);
+            this.labelLocal.Size = new System.Drawing.Size(36, 13);
             this.labelLocal.TabIndex = 0;
             this.labelLocal.Text = "Recp.";
             // 
             // textBoxLocalIP
             // 
-            this.textBoxLocalIP.Location = new System.Drawing.Point(70, 12);
+            this.textBoxLocalIP.Location = new System.Drawing.Point(315, 197);
             this.textBoxLocalIP.Name = "textBoxLocalIP";
             this.textBoxLocalIP.Size = new System.Drawing.Size(120, 20);
             this.textBoxLocalIP.TabIndex = 1;
@@ -72,21 +71,12 @@ namespace socketUDP
             this.textBoxLocalPort.TabIndex = 2;
             this.textBoxLocalPort.Text = "3031";
             // 
-            // labelLocalPort
-            // 
-            this.labelLocalPort.AutoSize = true;
-            this.labelLocalPort.Location = new System.Drawing.Point(196, 15);
-            this.labelLocalPort.Name = "labelLocalPort";
-            this.labelLocalPort.Size = new System.Drawing.Size(26, 13);
-            this.labelLocalPort.TabIndex = 3;
-            this.labelLocalPort.Text = "Port";
-            // 
             // labelDest
             // 
             this.labelDest.AutoSize = true;
             this.labelDest.Location = new System.Drawing.Point(12, 45);
             this.labelDest.Name = "labelDest";
-            this.labelDest.Size = new System.Drawing.Size(37, 13);
+            this.labelDest.Size = new System.Drawing.Size(32, 13);
             this.labelDest.TabIndex = 4;
             this.labelDest.Text = "Dest.";
             // 
@@ -105,15 +95,6 @@ namespace socketUDP
             this.textBoxDestPort.Size = new System.Drawing.Size(60, 20);
             this.textBoxDestPort.TabIndex = 6;
             this.textBoxDestPort.Text = "3032";
-            // 
-            // labelDestPort
-            // 
-            this.labelDestPort.AutoSize = true;
-            this.labelDestPort.Location = new System.Drawing.Point(196, 45);
-            this.labelDestPort.Name = "labelDestPort";
-            this.labelDestPort.Size = new System.Drawing.Size(26, 13);
-            this.labelDestPort.TabIndex = 7;
-            this.labelDestPort.Text = "Port";
             // 
             // labelEnvoi
             // 
@@ -137,7 +118,7 @@ namespace socketUDP
             this.labelRecv.AutoSize = true;
             this.labelRecv.Location = new System.Drawing.Point(12, 113);
             this.labelRecv.Name = "labelRecv";
-            this.labelRecv.Size = new System.Drawing.Size(33, 13);
+            this.labelRecv.Size = new System.Drawing.Size(36, 13);
             this.labelRecv.TabIndex = 10;
             this.labelRecv.Text = "Recp.";
             // 
@@ -149,6 +130,7 @@ namespace socketUDP
             this.textBoxReceive.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textBoxReceive.Size = new System.Drawing.Size(218, 180);
             this.textBoxReceive.TabIndex = 11;
+            this.textBoxReceive.TextChanged += new System.EventHandler(this.textBoxReceive_TextChanged);
             // 
             // buttonCreate
             // 
@@ -200,6 +182,24 @@ namespace socketUDP
             this.buttonClear.UseVisualStyleBackColor = true;
             this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
             // 
+            // labelLocalPort
+            // 
+            this.labelLocalPort.AutoSize = true;
+            this.labelLocalPort.Location = new System.Drawing.Point(196, 15);
+            this.labelLocalPort.Name = "labelLocalPort";
+            this.labelLocalPort.Size = new System.Drawing.Size(26, 13);
+            this.labelLocalPort.TabIndex = 3;
+            this.labelLocalPort.Text = "Port";
+            // 
+            // labelDestPort
+            // 
+            this.labelDestPort.AutoSize = true;
+            this.labelDestPort.Location = new System.Drawing.Point(196, 45);
+            this.labelDestPort.Name = "labelDestPort";
+            this.labelDestPort.Size = new System.Drawing.Size(26, 13);
+            this.labelDestPort.TabIndex = 7;
+            this.labelDestPort.Text = "Port";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -229,6 +229,7 @@ namespace socketUDP
             this.Text = "Communication par socket UDP";
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
 
         #endregion

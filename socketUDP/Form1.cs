@@ -14,7 +14,6 @@ namespace socketUDP
 {
     public partial class Form1 : Form
     {
-        // Handle demandé par l'énoncé
         private Socket SSockUDP;
 
         public Form1()
@@ -26,8 +25,7 @@ namespace socketUDP
         private void UpdateButtons()
         {
             bool opened = SSockUDP != null;
-            if (this.Controls.Count == 0) return; // designer-time safeguard
-            // Enable/disable buttons based on socket state
+            if (this.Controls.Count == 0) return;
             var btnCreate = this.Controls.Find("buttonCreate", true).FirstOrDefault() as Button;
             var btnClose = this.Controls.Find("buttonClose", true).FirstOrDefault() as Button;
             var btnSend = this.Controls.Find("buttonSend", true).FirstOrDefault() as Button;
@@ -54,14 +52,19 @@ namespace socketUDP
                 IPEndPoint localEP = new IPEndPoint(localIP, localPort);
 
                 SSockUDP = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                SSockUDP.ReceiveTimeout = 2000; // 2s timeout for blocking ReceiveFrom
+                SSockUDP.ReceiveTimeout = 2000;
                 SSockUDP.Bind(localEP);
 
                 AppendRecvLine($"Bind OK sur {localEP}");
             }
+            catch (SocketException se)
+            {
+                AppendRecvLine("Message d'erreur (création/bind) : " + se.ToString());
+                SSockUDP = null;
+            }
             catch (Exception ex)
             {
-                MessageBox.Show(this, ex.Message, "Erreur création/bind", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                AppendRecvLine("Erreur inconnue (création/bind) : " + ex.Message);
                 SSockUDP = null;
             }
             finally
@@ -80,10 +83,18 @@ namespace socketUDP
                     SSockUDP = null;
                     AppendRecvLine("Socket fermé.");
                 }
+                else
+                {
+                    AppendRecvLine("Socket déjà fermée ou non créée.");
+                }
+            }
+            catch (SocketException se)
+            {
+                AppendRecvLine("Message d'erreur (fermeture) : " + se.ToString());
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, ex.Message, "Erreur fermeture", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                AppendRecvLine("Erreur inconnue (fermeture) : " + ex.Message);
             }
             finally
             {
@@ -95,7 +106,7 @@ namespace socketUDP
         {
             if (SSockUDP == null)
             {
-                MessageBox.Show(this, "Créez et bindez d'abord la socket.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                AppendRecvLine("Impossible d'envoyer : socket non créée/bindée.");
                 return;
             }
             try
@@ -107,10 +118,27 @@ namespace socketUDP
                 byte[] msg = Encoding.ASCII.GetBytes(textBoxSend.Text ?? string.Empty);
                 int sent = SSockUDP.SendTo(msg, destEP);
                 AppendRecvLine($"Envoyé {sent} octets à {destEP}");
+
+                // Avertissement si IPEr == IPEd
+                try
+                {
+                    string localIpTxt = textBoxLocalIP.Text.Trim();
+                    string localPortTxt = textBoxLocalPort.Text.Trim();
+                    if (!string.IsNullOrEmpty(localIpTxt) && !string.IsNullOrEmpty(localPortTxt) &&
+                        localIpTxt == textBoxDestIP.Text.Trim() && localPortTxt == textBoxDestPort.Text.Trim())
+                    {
+                        AppendRecvLine("Attention: le point de terminaison de réception (IPEr) est identique à la destination (IPEd). Envoi vers soi-même.");
+                    }
+                }
+                catch { /* avertissement best-effort */ }
+            }
+            catch (SocketException se)
+            {
+                AppendRecvLine("Message d'erreur (envoi) : " + se.ToString());
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, ex.Message, "Erreur envoi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                AppendRecvLine("Erreur inconnue (envoi) : " + ex.Message);
             }
         }
 
@@ -118,7 +146,7 @@ namespace socketUDP
         {
             if (SSockUDP == null)
             {
-                MessageBox.Show(this, "Créez et bindez d'abord la socket.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                AppendRecvLine("Impossible de recevoir : socket non créée/bindée.");
                 return;
             }
             try
@@ -137,12 +165,12 @@ namespace socketUDP
                 }
                 else
                 {
-                    MessageBox.Show(this, sx.Message, "Erreur réception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    AppendRecvLine("Message d'erreur (réception) : " + sx.ToString());
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, ex.Message, "Erreur réception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                AppendRecvLine("Erreur inconnue (réception) : " + ex.Message);
             }
         }
 
@@ -154,6 +182,17 @@ namespace socketUDP
         private void AppendRecvLine(string text)
         {
             textBoxReceive.AppendText(text + Environment.NewLine);
+        }
+
+        // Gestion de l'événement TextChanged pour éviter les erreurs du Concepteur
+        private void textBoxReceive_TextChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                textBoxReceive.SelectionStart = textBoxReceive.TextLength;
+                textBoxReceive.ScrollToCaret();
+            }
+            catch { }
         }
     }
 }
