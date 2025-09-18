@@ -27,6 +27,7 @@ namespace socketUDP
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.labelLocal = new System.Windows.Forms.Label();
             this.textBoxLocalIP = new System.Windows.Forms.TextBox();
             this.textBoxLocalPort = new System.Windows.Forms.TextBox();
@@ -42,8 +43,11 @@ namespace socketUDP
             this.buttonSend = new System.Windows.Forms.Button();
             this.buttonReceive = new System.Windows.Forms.Button();
             this.buttonClear = new System.Windows.Forms.Button();
+            this.buttonStartPolling = new System.Windows.Forms.Button();
+            this.buttonStopPolling = new System.Windows.Forms.Button();
             this.labelLocalPort = new System.Windows.Forms.Label();
             this.labelDestPort = new System.Windows.Forms.Label();
+            this.timerPolling = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // labelLocal
@@ -182,6 +186,26 @@ namespace socketUDP
             this.buttonClear.UseVisualStyleBackColor = true;
             this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
             // 
+            // buttonStartPolling
+            // 
+            this.buttonStartPolling.Location = new System.Drawing.Point(315, 140);
+            this.buttonStartPolling.Name = "buttonStartPolling";
+            this.buttonStartPolling.Size = new System.Drawing.Size(200, 25);
+            this.buttonStartPolling.TabIndex = 17;
+            this.buttonStartPolling.Text = "Démarrer scrutation";
+            this.buttonStartPolling.UseVisualStyleBackColor = true;
+            this.buttonStartPolling.Click += new System.EventHandler(this.buttonStartPolling_Click);
+            // 
+            // buttonStopPolling
+            // 
+            this.buttonStopPolling.Location = new System.Drawing.Point(315, 170);
+            this.buttonStopPolling.Name = "buttonStopPolling";
+            this.buttonStopPolling.Size = new System.Drawing.Size(200, 25);
+            this.buttonStopPolling.TabIndex = 18;
+            this.buttonStopPolling.Text = "Arrêter scrutation";
+            this.buttonStopPolling.UseVisualStyleBackColor = true;
+            this.buttonStopPolling.Click += new System.EventHandler(this.buttonStopPolling_Click);
+            // 
             // labelLocalPort
             // 
             this.labelLocalPort.AutoSize = true;
@@ -200,11 +224,18 @@ namespace socketUDP
             this.labelDestPort.TabIndex = 7;
             this.labelDestPort.Text = "Port";
             // 
+            // timerPolling
+            // 
+            this.timerPolling.Interval = 100;
+            this.timerPolling.Tick += new System.EventHandler(this.timerPolling_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(534, 311);
+            this.Controls.Add(this.buttonStopPolling);
+            this.Controls.Add(this.buttonStartPolling);
             this.Controls.Add(this.buttonClear);
             this.Controls.Add(this.buttonReceive);
             this.Controls.Add(this.buttonSend);
@@ -249,8 +280,10 @@ namespace socketUDP
         private System.Windows.Forms.Button buttonSend;
         private System.Windows.Forms.Button buttonReceive;
         private System.Windows.Forms.Button buttonClear;
+        private System.Windows.Forms.Button buttonStartPolling;
+        private System.Windows.Forms.Button buttonStopPolling;
         private System.Windows.Forms.Label labelLocalPort;
         private System.Windows.Forms.Label labelDestPort;
+        private System.Windows.Forms.Timer timerPolling;
     }
 }
-

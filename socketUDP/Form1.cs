@@ -30,11 +30,40 @@ namespace socketUDP
             var btnClose = this.Controls.Find("buttonClose", true).FirstOrDefault() as Button;
             var btnSend = this.Controls.Find("buttonSend", true).FirstOrDefault() as Button;
             var btnReceive = this.Controls.Find("buttonReceive", true).FirstOrDefault() as Button;
+            var btnClear = this.Controls.Find("buttonClear", true).FirstOrDefault() as Button;
+            var btnStartPolling = this.Controls.Find("buttonStartPolling", true).FirstOrDefault() as Button;
+            var btnStopPolling = this.Controls.Find("buttonStopPolling", true).FirstOrDefault() as Button;
 
             if (btnCreate != null) btnCreate.Enabled = !opened;
             if (btnClose != null) btnClose.Enabled = opened;
             if (btnSend != null) btnSend.Enabled = opened;
             if (btnReceive != null) btnReceive.Enabled = opened;
+            if (btnClear != null) btnClear.Enabled = true;
+            
+            // Gestion des boutons de scrutation
+            bool pollingActive = timerPolling.Enabled;
+            if (btnStartPolling != null) btnStartPolling.Enabled = opened && !pollingActive;
+            if (btnStopPolling != null) btnStopPolling.Enabled = opened && pollingActive;
+        }
+
+        private void buttonStartPolling_Click(object sender, EventArgs e)
+        {
+            if (SSockUDP == null)
+            {
+                AppendRecvLine("Impossible de démarrer la scrutation : socket non créée.");
+                return;
+            }
+            
+            timerPolling.Start();
+            AppendRecvLine("Scrutation démarrée (100ms).");
+            UpdateButtons();
+        }
+
+        private void buttonStopPolling_Click(object sender, EventArgs e)
+        {
+            timerPolling.Stop();
+            AppendRecvLine("Scrutation arrêtée.");
+            UpdateButtons();
         }
 
         private void buttonCreate_Click(object sender, EventArgs e)
@@ -193,6 +222,34 @@ namespace socketUDP
                 textBoxReceive.ScrollToCaret();
             }
             catch { }
+        }
+
+        // Scrutation périodique
+        private void timerPolling_Tick(object sender, EventArgs e)
+        {
+            if (SSockUDP == null)
+                return;
+
+            try
+            {
+                // Vérifie données disponibles mémoire tampon
+                if (SSockUDP.Available > 0)
+                {
+                    byte[] buffer = new byte[1024];
+                    EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
+                    int len = SSockUDP.ReceiveFrom(buffer, ref remoteEP);
+                    string txt = Encoding.ASCII.GetString(buffer, 0, len);
+                    AppendRecvLine($"[Auto] De {remoteEP} -> {txt}");
+                }
+            }
+            catch (SocketException se)
+            {
+                AppendRecvLine("[Auto] Erreur réception : " + se.ToString());
+            }
+            catch (Exception ex)
+            {
+                AppendRecvLine("[Auto] Erreur inconnue : " + ex.Message);
+            }
         }
     }
 }
