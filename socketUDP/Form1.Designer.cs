@@ -317,6 +317,5 @@ namespace socketUDP
         private System.Windows.Forms.Label labelDestPort;
         private System.Windows.Forms.Timer timerPolling;
         private System.Windows.Forms.Timer timerTcp;
-        private System.ComponentModel.IContainer components;
     }
 }
