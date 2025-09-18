@@ -14,7 +14,8 @@ namespace socketUDP
 {
     public partial class Form1 : Form
     {
-        private Socket _socket;
+        // Handle demandé par l'énoncé
+        private Socket SSockUDP;
 
         public Form1()
         {
@@ -24,13 +25,13 @@ namespace socketUDP
 
         private void UpdateButtons()
         {
-            bool opened = _socket != null;
+            bool opened = SSockUDP != null;
             if (this.Controls.Count == 0) return; // designer-time safeguard
             // Enable/disable buttons based on socket state
-            var btnCreate = this.Controls.Find("btnCreateBind", true).FirstOrDefault() as Button;
-            var btnClose = this.Controls.Find("btnClose", true).FirstOrDefault() as Button;
-            var btnSend = this.Controls.Find("btnSend", true).FirstOrDefault() as Button;
-            var btnReceive = this.Controls.Find("btnReceive", true).FirstOrDefault() as Button;
+            var btnCreate = this.Controls.Find("buttonCreate", true).FirstOrDefault() as Button;
+            var btnClose = this.Controls.Find("buttonClose", true).FirstOrDefault() as Button;
+            var btnSend = this.Controls.Find("buttonSend", true).FirstOrDefault() as Button;
+            var btnReceive = this.Controls.Find("buttonReceive", true).FirstOrDefault() as Button;
 
             if (btnCreate != null) btnCreate.Enabled = !opened;
             if (btnClose != null) btnClose.Enabled = opened;
@@ -38,30 +39,30 @@ namespace socketUDP
             if (btnReceive != null) btnReceive.Enabled = opened;
         }
 
-        private void btnCreateBind_Click(object sender, EventArgs e)
+        private void buttonCreate_Click(object sender, EventArgs e)
         {
             try
             {
-                if (_socket != null)
+                if (SSockUDP != null)
                 {
                     AppendRecvLine("Socket déjà créé.");
                     return;
                 }
 
-                var localIP = IPAddress.Parse(txtLocalIP.Text.Trim());
-                int localPort = int.Parse(txtLocalPort.Text.Trim());
+                var localIP = IPAddress.Parse(textBoxLocalIP.Text.Trim());
+                int localPort = int.Parse(textBoxLocalPort.Text.Trim());
                 IPEndPoint localEP = new IPEndPoint(localIP, localPort);
 
-                _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                _socket.ReceiveTimeout = 2000; // 2s timeout for blocking ReceiveFrom
-                _socket.Bind(localEP);
+                SSockUDP = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                SSockUDP.ReceiveTimeout = 2000; // 2s timeout for blocking ReceiveFrom
+                SSockUDP.Bind(localEP);
 
                 AppendRecvLine($"Bind OK sur {localEP}");
             }
             catch (Exception ex)
             {
                 MessageBox.Show(this, ex.Message, "Erreur création/bind", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                _socket = null;
+                SSockUDP = null;
             }
             finally
             {
@@ -69,14 +70,14 @@ namespace socketUDP
             }
         }
 
-        private void btnClose_Click(object sender, EventArgs e)
+        private void buttonClose_Click(object sender, EventArgs e)
         {
             try
             {
-                if (_socket != null)
+                if (SSockUDP != null)
                 {
-                    _socket.Close();
-                    _socket = null;
+                    SSockUDP.Close();
+                    SSockUDP = null;
                     AppendRecvLine("Socket fermé.");
                 }
             }
@@ -90,21 +91,21 @@ namespace socketUDP
             }
         }
 
-        private void btnSend_Click(object sender, EventArgs e)
+        private void buttonSend_Click(object sender, EventArgs e)
         {
-            if (_socket == null)
+            if (SSockUDP == null)
             {
                 MessageBox.Show(this, "Créez et bindez d'abord la socket.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             try
             {
-                var destIP = IPAddress.Parse(txtDestIP.Text.Trim());
-                int destPort = int.Parse(txtDestPort.Text.Trim());
+                var destIP = IPAddress.Parse(textBoxDestIP.Text.Trim());
+                int destPort = int.Parse(textBoxDestPort.Text.Trim());
                 EndPoint destEP = new IPEndPoint(destIP, destPort);
 
-                byte[] msg = Encoding.ASCII.GetBytes(txtSend.Text ?? string.Empty);
-                int sent = _socket.SendTo(msg, destEP);
+                byte[] msg = Encoding.ASCII.GetBytes(textBoxSend.Text ?? string.Empty);
+                int sent = SSockUDP.SendTo(msg, destEP);
                 AppendRecvLine($"Envoyé {sent} octets à {destEP}");
             }
             catch (Exception ex)
@@ -113,9 +114,9 @@ namespace socketUDP
             }
         }
 
-        private void btnReceive_Click(object sender, EventArgs e)
+        private void buttonReceive_Click(object sender, EventArgs e)
         {
-            if (_socket == null)
+            if (SSockUDP == null)
             {
                 MessageBox.Show(this, "Créez et bindez d'abord la socket.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
@@ -124,7 +125,7 @@ namespace socketUDP
             {
                 byte[] buffer = new byte[1024];
                 EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
-                int len = _socket.ReceiveFrom(buffer, ref remoteEP);
+                int len = SSockUDP.ReceiveFrom(buffer, ref remoteEP);
                 string txt = Encoding.ASCII.GetString(buffer, 0, len);
                 AppendRecvLine($"De {remoteEP} -> {txt}");
             }
@@ -145,14 +146,15 @@ namespace socketUDP
             }
         }
 
-        private void btnClear_Click(object sender, EventArgs e)
+        private void buttonClear_Click(object sender, EventArgs e)
         {
-            txtReceive.Clear();
+            textBoxReceive.Clear();
         }
 
         private void AppendRecvLine(string text)
         {
-            txtReceive.AppendText(text + Environment.NewLine);
+            textBoxReceive.AppendText(text + Environment.NewLine);
         }
     }
 }
+
