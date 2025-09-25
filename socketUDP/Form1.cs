@@ -19,6 +19,8 @@ namespace socketUDP
         private Socket listenTcp;
         private Socket clientTcp;
         private IPEndPoint clientTcpEP;
+        // Client TCP
+        private Socket tcpClient;
 
         public Form1()
         {
@@ -38,6 +40,9 @@ namespace socketUDP
             var btnStartPolling = this.Controls.Find("buttonStartPolling", true).FirstOrDefault() as Button;
             var btnStopPolling = this.Controls.Find("buttonStopPolling", true).FirstOrDefault() as Button;
             var btnStartTcpServer = this.Controls.Find("buttonStartTcpServer", true).FirstOrDefault() as Button;
+            var btnConnectTcp = this.Controls.Find("buttonConnectTcp", true).FirstOrDefault() as Button;
+            var btnDisconnectTcp = this.Controls.Find("buttonDisconnectTcp", true).FirstOrDefault() as Button;
+            var btnClientSend = this.Controls.Find("buttonClientSend", true).FirstOrDefault() as Button;
 
             if (btnCreate != null) btnCreate.Enabled = !opened;
             if (btnClose != null) btnClose.Enabled = opened;
@@ -52,6 +57,12 @@ namespace socketUDP
 
             // Démarrage serveur TCP : activable si pas déjà en écoute
             if (btnStartTcpServer != null) btnStartTcpServer.Enabled = (listenTcp == null);
+
+            // Boutons client TCP
+            bool clientConnected = tcpClient != null;
+            if (btnConnectTcp != null) btnConnectTcp.Enabled = !clientConnected;
+            if (btnDisconnectTcp != null) btnDisconnectTcp.Enabled = clientConnected;
+            if (btnClientSend != null) btnClientSend.Enabled = clientConnected;
         }
 
         private void buttonStartPolling_Click(object sender, EventArgs e)
@@ -109,6 +120,8 @@ namespace socketUDP
                 UpdateButtons();
             }
         }
+
+        
 
         private void buttonClose_Click(object sender, EventArgs e)
         {
@@ -318,6 +331,131 @@ namespace socketUDP
             catch (Exception ex)
             {
                 AppendServerLine("Erreur inconnue TCP : " + ex.Message);
+            }
+        }
+
+        // Journalisation pour le client TCP
+        private void AppendClientLine(string text)
+        {
+            var tb = this.Controls.Find("textBoxClientLog", true).FirstOrDefault() as TextBox;
+            if (tb != null)
+                tb.AppendText(text + Environment.NewLine);
+            else
+                AppendRecvLine("[TCP-Client] " + text);
+        }
+
+        private void buttonConnectTcp_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (tcpClient != null)
+                {
+                    AppendClientLine("Déjà connecté.");
+                    return;
+                }
+
+                var destIP = IPAddress.Parse(textBoxDestIP.Text.Trim());
+                int destPort = int.Parse(textBoxDestPort.Text.Trim());
+                var destEP = new IPEndPoint(destIP, destPort);
+
+                tcpClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                tcpClient.Connect(destEP);
+                AppendClientLine($"Connecté à {destEP}");
+                timerClient.Start();
+            }
+            catch (SocketException se)
+            {
+                AppendClientLine("Erreur connexion: " + se.SocketErrorCode + " - " + se.Message);
+                try { if (tcpClient != null) { tcpClient.Close(); tcpClient = null; } } catch { }
+            }
+            catch (Exception ex)
+            {
+                AppendClientLine("Erreur inconnue (connexion): " + ex.Message);
+                try { if (tcpClient != null) { tcpClient.Close(); tcpClient = null; } } catch { }
+            }
+            finally
+            {
+                UpdateButtons();
+            }
+        }
+
+        private void buttonDisconnectTcp_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                timerClient.Stop();
+                if (tcpClient != null)
+                {
+                    tcpClient.Close();
+                    tcpClient = null;
+                    AppendClientLine("Déconnecté.");
+                }
+            }
+            catch { }
+            finally
+            {
+                UpdateButtons();
+            }
+        }
+
+        private void buttonClientSend_Click(object sender, EventArgs e)
+        {
+            if (tcpClient == null)
+            {
+                AppendClientLine("Non connecté.");
+                return;
+            }
+            try
+            {
+                var txtBox = this.Controls.Find("textBoxClientSend", true).FirstOrDefault() as TextBox;
+                string msg = txtBox != null ? (txtBox.Text ?? string.Empty) : string.Empty;
+                byte[] data = Encoding.ASCII.GetBytes(msg);
+                tcpClient.Send(data);
+                AppendClientLine($"Envoyé {data.Length} octets");
+            }
+            catch (SocketException se)
+            {
+                AppendClientLine("Erreur envoi: " + se.SocketErrorCode + " - " + se.Message);
+            }
+            catch (Exception ex)
+            {
+                AppendClientLine("Erreur inconnue (envoi): " + ex.Message);
+            }
+        }
+
+        private void timerClient_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                if (tcpClient == null) return;
+
+                if (tcpClient.Poll(0, SelectMode.SelectRead))
+                {
+                    if (tcpClient.Available == 0)
+                    {
+                        AppendClientLine("Serveur fermé.");
+                        timerClient.Stop();
+                        tcpClient.Close();
+                        tcpClient = null;
+                        UpdateButtons();
+                        return;
+                    }
+                    byte[] buf = new byte[4096];
+                    int n = tcpClient.Receive(buf);
+                    if (n > 0)
+                    {
+                        string txt = Encoding.ASCII.GetString(buf, 0, n);
+                        AppendClientLine($"Reçu -> {txt}");
+                    }
+                }
+            }
+            catch (SocketException se)
+            {
+                AppendClientLine("Erreur réception: " + se.SocketErrorCode + " - " + se.Message);
+            }
+            catch (Exception ex)
+            {
+                AppendClientLine("Erreur inconnue (réception): " + ex.Message);
             }
         }
 
