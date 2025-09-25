@@ -53,6 +53,8 @@ namespace socketUDP
             this.buttonClientSend = new System.Windows.Forms.Button();
             this.textBoxClientLog = new System.Windows.Forms.TextBox();
             this.timerClient = new System.Windows.Forms.Timer(this.components);
+            this.buttonStartAsyncServer = new System.Windows.Forms.Button();
+            this.buttonTcpClientExample = new System.Windows.Forms.Button();
             this.labelLocalPort = new System.Windows.Forms.Label();
             this.labelDestPort = new System.Windows.Forms.Label();
             this.timerPolling = new System.Windows.Forms.Timer(this.components);
@@ -251,6 +253,26 @@ namespace socketUDP
             this.buttonDisconnectTcp.UseVisualStyleBackColor = true;
             this.buttonDisconnectTcp.Click += new System.EventHandler(this.buttonDisconnectTcp_Click);
             // 
+            // buttonStartAsyncServer
+            // 
+            this.buttonStartAsyncServer.Location = new System.Drawing.Point(315, 410);
+            this.buttonStartAsyncServer.Name = "buttonStartAsyncServer";
+            this.buttonStartAsyncServer.Size = new System.Drawing.Size(200, 25);
+            this.buttonStartAsyncServer.TabIndex = 26;
+            this.buttonStartAsyncServer.Text = "Démarrer serveur TCP (Async)";
+            this.buttonStartAsyncServer.UseVisualStyleBackColor = true;
+            this.buttonStartAsyncServer.Click += new System.EventHandler(this.buttonStartAsyncServer_Click);
+            // 
+            // buttonTcpClientExample
+            // 
+            this.buttonTcpClientExample.Location = new System.Drawing.Point(315, 440);
+            this.buttonTcpClientExample.Name = "buttonTcpClientExample";
+            this.buttonTcpClientExample.Size = new System.Drawing.Size(200, 25);
+            this.buttonTcpClientExample.TabIndex = 27;
+            this.buttonTcpClientExample.Text = "TcpClient: GET /";
+            this.buttonTcpClientExample.UseVisualStyleBackColor = true;
+            this.buttonTcpClientExample.Click += new System.EventHandler(this.buttonTcpClientExample_Click);
+            // 
             // textBoxClientSend
             // 
             this.textBoxClientSend.Location = new System.Drawing.Point(12, 510);
@@ -271,7 +293,7 @@ namespace socketUDP
             // 
             // textBoxClientLog
             // 
-            this.textBoxClientLog.Location = new System.Drawing.Point(12, 410);
+            this.textBoxClientLog.Location = new System.Drawing.Point(12, 440);
             this.textBoxClientLog.Multiline = true;
             this.textBoxClientLog.Name = "textBoxClientLog";
             this.textBoxClientLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -310,13 +332,15 @@ namespace socketUDP
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(534, 600);
+            this.ClientSize = new System.Drawing.Size(534, 650);
             this.Controls.Add(this.textBoxClientLog);
             this.Controls.Add(this.buttonStopPolling);
             this.Controls.Add(this.buttonStartPolling);
             this.Controls.Add(this.buttonStartTcpServer);
             this.Controls.Add(this.buttonConnectTcp);
             this.Controls.Add(this.buttonDisconnectTcp);
+            this.Controls.Add(this.buttonStartAsyncServer);
+            this.Controls.Add(this.buttonTcpClientExample);
             this.Controls.Add(this.textBoxClientSend);
             this.Controls.Add(this.buttonClientSend);
             this.Controls.Add(this.buttonClear);
@@ -376,5 +400,7 @@ namespace socketUDP
         private System.Windows.Forms.Timer timerPolling;
         private System.Windows.Forms.Timer timerTcp;
         private System.Windows.Forms.Timer timerClient;
+        private System.Windows.Forms.Button buttonStartAsyncServer;
+        private System.Windows.Forms.Button buttonTcpClientExample;
     }
 }

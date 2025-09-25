@@ -21,6 +21,9 @@ namespace socketUDP
         private IPEndPoint clientTcpEP;
         // Client TCP
         private Socket tcpClient;
+        private Socket asyncListen;
+        private System.Threading.CancellationTokenSource asyncCts;
+        private System.Threading.Tasks.Task asyncSrvTask;
 
         public Form1()
         {
@@ -420,6 +423,86 @@ namespace socketUDP
             catch (Exception ex)
             {
                 AppendClientLine("Erreur inconnue (envoi): " + ex.Message);
+            }
+        }
+
+        private async void buttonStartAsyncServer_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (asyncSrvTask != null && !asyncSrvTask.IsCompleted) return;
+                var ip = IPAddress.Parse(textBoxLocalIP.Text.Trim());
+                int port = int.Parse(textBoxLocalPort.Text.Trim());
+                var ep = new IPEndPoint(ip, port);
+                asyncListen = new Socket(ep.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                asyncListen.Bind(ep);
+                asyncListen.Listen(100);
+                asyncCts = new System.Threading.CancellationTokenSource();
+                asyncSrvTask = RunAsyncEcho(asyncListen, asyncCts.Token);
+                AppendServerLine($"[Async] En écoute sur {ep}");
+            }
+            catch (Exception ex)
+            {
+                AppendServerLine("[Async] Erreur: " + ex.Message);
+                try { asyncListen?.Close(); asyncListen = null; } catch { }
+            }
+        }
+
+        private async System.Threading.Tasks.Task RunAsyncEcho(Socket listener, System.Threading.CancellationToken ct)
+        {
+            try
+            {
+                var handler = await listener.AcceptAsync();
+                var rep = handler.RemoteEndPoint as IPEndPoint;
+                AppendServerLine($"[Async] Client {rep}");
+                while (!ct.IsCancellationRequested)
+                {
+                    var buf = new byte[1024];
+                    var received = await handler.ReceiveAsync(new ArraySegment<byte>(buf), SocketFlags.None);
+                    if (received == 0) break;
+                    var txt = Encoding.UTF8.GetString(buf, 0, received);
+                    AppendServerLine($"[Async] -> {txt}");
+                    if (txt.Contains("<|EOM|>"))
+                    {
+                        var ack = Encoding.UTF8.GetBytes("<|ACK|>");
+                        await handler.SendAsync(new ArraySegment<byte>(ack), SocketFlags.None);
+                        AppendServerLine("[Async] ACK envoyé");
+                        break;
+                    }
+                }
+                try { handler.Shutdown(SocketShutdown.Both); } catch { }
+                handler.Close();
+            }
+            catch (Exception ex)
+            {
+                AppendServerLine("[Async] Erreur boucle: " + ex.Message);
+            }
+            finally
+            {
+                try { listener.Close(); } catch { }
+                asyncListen = null;
+            }
+        }
+
+        private async void buttonTcpClientExample_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string host = textBoxDestIP.Text.Trim();
+                int port = int.Parse(textBoxDestPort.Text.Trim());
+                using (var client = new System.Net.Sockets.TcpClient(host, port))
+                using (var ns = client.GetStream())
+                {
+                    var req = Encoding.ASCII.GetBytes("GET /\r\n\r\n");
+                    await ns.WriteAsync(req, 0, req.Length);
+                    var buf = new byte[4096];
+                    int n = await ns.ReadAsync(buf, 0, buf.Length);
+                    AppendClientLine($"[TcpClient] nbcarecu {n}\r\n" + Encoding.ASCII.GetString(buf, 0, Math.Max(0, n)));
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendClientLine("[TcpClient] Erreur: " + ex.Message);
             }
         }
 
